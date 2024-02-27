@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:hr_dtr_web/model/group_model.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,7 @@ import '../data/version_provider.dart';
 import '../model/department_model.dart';
 import '../widgets/groups_widget.dart';
 import '../widgets/logs_widget.dart';
-import 'group_view.dart';
+import 'add_group_view.dart';
 
 final _is24HourFormat = ValueNotifier(false);
 ValueNotifier<bool> get is24HourFormat => _is24HourFormat;
@@ -42,7 +43,6 @@ class _HomeViewState extends State<HomeView> {
       await version.getPackageInfo();
       await department.getDepartment();
       await group.getGroup();
-      setState(() {});
     });
   }
 
@@ -98,8 +98,8 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     const String title = 'UC-1 DTR History HR';
-    final department = Provider.of<DepartmentProvider>(context, listen: false);
-
+    final department = Provider.of<DepartmentProvider>(context);
+    final group = Provider.of<GroupProvider>(context);
     final version = Provider.of<VersionProvider>(context);
 
     return Scaffold(
@@ -133,7 +133,7 @@ class _HomeViewState extends State<HomeView> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const GroupView(),
+                      builder: (context) => const AddGroupView(),
                     ),
                   );
                 },
@@ -275,60 +275,107 @@ class _HomeViewState extends State<HomeView> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10.0),
-                              Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Department: ',
-                                    style: TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 40.0,
-                                    width: 640.0,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(5),
-                                      border: Border.all(
-                                        color: Colors.grey,
-                                        style: BorderStyle.solid,
-                                        width: 1.0,
+                              if (group.dropdownValue.id == 0) ...[
+                                const SizedBox(height: 10.0),
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Department: ',
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<DepartmentModel>(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10.0),
+                                    Container(
+                                      height: 40.0,
+                                      width: 640.0,
+                                      decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(5),
-                                        value: department.dropdownValue,
-                                        onChanged:
-                                            (DepartmentModel? value) async {
-                                          if (value != null) {
-                                            setState(() {
-                                              department.dropdownValue = value;
-                                            });
-                                          }
-                                        },
-                                        items: department.departmentList.map<
-                                                DropdownMenuItem<
-                                                    DepartmentModel>>(
-                                            (DepartmentModel value) {
-                                          return DropdownMenuItem<
-                                              DepartmentModel>(
-                                            value: value,
-                                            child: Text(value.departmentName),
-                                          );
-                                        }).toList(),
+                                        border: Border.all(
+                                          color: Colors.grey,
+                                          style: BorderStyle.solid,
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<DepartmentModel>(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10.0),
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                          value: department.dropdownValue,
+                                          onChanged:
+                                              (DepartmentModel? value) async {
+                                            if (value != null) {
+                                              setState(() {
+                                                department.dropdownValue =
+                                                    value;
+                                              });
+                                            }
+                                          },
+                                          items: department.departmentList.map<
+                                                  DropdownMenuItem<
+                                                      DepartmentModel>>(
+                                              (DepartmentModel value) {
+                                            return DropdownMenuItem<
+                                                DepartmentModel>(
+                                              value: value,
+                                              child: Text(value.departmentName),
+                                            );
+                                          }).toList(),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10.0),
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        style: const TextStyle(fontSize: 18.0),
+                                        decoration: const InputDecoration(
+                                          label: Text('ID no. or Name'),
+                                          border: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: Colors.grey,
+                                              width: 1.0,
+                                            ),
+                                          ),
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.fromLTRB(
+                                              12.0, 12.0, 12.0, 12.0),
+                                        ),
+                                        controller: idController,
+                                        onSubmitted: (data) async {
+                                          history.changeLoadingState(true);
+                                          await Future.delayed(
+                                              const Duration(seconds: 1));
+                                          if (idController.text.isEmpty) {
+                                            // get records all
+                                            await history.getRecordsAll(
+                                                department:
+                                                    department.dropdownValue);
+                                          } else {
+                                            // get records with id or name
+                                            await history.getRecords(
+                                                employeeId:
+                                                    idController.text.trim(),
+                                                department:
+                                                    department.dropdownValue);
+                                          }
+                                          history.changeLoadingState(false);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               const SizedBox(height: 10.0),
                               Row(
                                 mainAxisSize: MainAxisSize.max,
@@ -355,73 +402,29 @@ class _HomeViewState extends State<HomeView> {
                                       ),
                                     ),
                                     child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<DepartmentModel>(
+                                      child: DropdownButton<GroupModel>(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 10.0),
                                         borderRadius: BorderRadius.circular(5),
-                                        value: department.dropdownValue,
-                                        onChanged:
-                                            (DepartmentModel? value) async {
+                                        value: group.dropdownValue,
+                                        onChanged: (GroupModel? value) async {
                                           if (value != null) {
                                             setState(() {
-                                              department.dropdownValue = value;
+                                              group.dropdownValue = value;
                                             });
+                                            //clear history
+                                            history.clearHistory();
                                           }
                                         },
-                                        items: department.departmentList.map<
-                                                DropdownMenuItem<
-                                                    DepartmentModel>>(
-                                            (DepartmentModel value) {
-                                          return DropdownMenuItem<
-                                              DepartmentModel>(
+                                        items: group.groupList
+                                            .map<DropdownMenuItem<GroupModel>>(
+                                                (GroupModel value) {
+                                          return DropdownMenuItem<GroupModel>(
                                             value: value,
-                                            child: Text(value.departmentName),
+                                            child: Text(value.groupName),
                                           );
                                         }).toList(),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10.0),
-                              Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      style: const TextStyle(fontSize: 18.0),
-                                      decoration: const InputDecoration(
-                                        label: Text('ID no. or Name'),
-                                        border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Colors.grey,
-                                            width: 1.0,
-                                          ),
-                                        ),
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.fromLTRB(
-                                            12.0, 12.0, 12.0, 12.0),
-                                      ),
-                                      controller: idController,
-                                      onSubmitted: (data) async {
-                                        history.changeLoadingState(true);
-                                        await Future.delayed(
-                                            const Duration(seconds: 1));
-                                        if (idController.text.isEmpty) {
-                                          // get records all
-                                          await history.getRecordsAll(
-                                              department:
-                                                  department.dropdownValue);
-                                        } else {
-                                          // get records with id or name
-                                          await history.getRecords(
-                                              employeeId:
-                                                  idController.text.trim(),
-                                              department:
-                                                  department.dropdownValue);
-                                        }
-                                        history.changeLoadingState(false);
-                                      },
                                     ),
                                   ),
                                 ],
@@ -535,15 +538,23 @@ class _HomeViewState extends State<HomeView> {
                                     history.changeLoadingState(true);
                                     await Future.delayed(
                                         const Duration(seconds: 1));
-                                    if (idController.text.isEmpty) {
-                                      // get records all
-                                      await history.getRecordsAll(
-                                          department: department.dropdownValue);
+                                    if (group.dropdownValue.id != 0) {
+                                      await history
+                                          .getGroupRecords(group.dropdownValue);
                                     } else {
-                                      // get records with id or name
-                                      await history.getRecords(
-                                          employeeId: idController.text.trim(),
-                                          department: department.dropdownValue);
+                                      if (idController.text.isEmpty) {
+                                        // get records all
+                                        await history.getRecordsAll(
+                                            department:
+                                                department.dropdownValue);
+                                      } else {
+                                        // get records with id or name
+                                        await history.getRecords(
+                                            employeeId:
+                                                idController.text.trim(),
+                                            department:
+                                                department.dropdownValue);
+                                      }
                                     }
                                     history.changeLoadingState(false);
                                   },

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:hr_dtr_web/model/department_model.dart';
 import 'package:provider/provider.dart';
 
 import '../data/department_provider.dart';
 import '../data/employeee_provider.dart';
 import '../data/group_provider.dart';
+import '../model/department_model.dart';
+import '../model/group_model.dart';
 
-class GroupView extends StatefulWidget {
-  const GroupView({super.key});
+class EditGroupView extends StatefulWidget {
+  const EditGroupView({super.key, required this.groupModel});
+  final GroupModel groupModel;
 
   @override
-  State<GroupView> createState() => _GroupViewState();
+  State<EditGroupView> createState() => _EditGroupViewState();
 }
 
-class _GroupViewState extends State<GroupView> {
+class _EditGroupViewState extends State<EditGroupView> {
   final groupNameController = TextEditingController();
   final searchController = TextEditingController();
 
@@ -25,14 +27,16 @@ class _GroupViewState extends State<GroupView> {
     final department = Provider.of<DepartmentProvider>(context, listen: false);
     group.clearEmployeeList();
     department.dropdownValue = department.departmentList[0];
+    groupNameController.text = widget.groupModel.groupName;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await employee.getEmployee('000');
+      await employee.getEmployee(department.dropdownValue.departmentId);
+      await group.getEmployeeGroup('${widget.groupModel.id}');
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    const String title = 'Create Group';
+    const String title = 'Edit Group';
     final employee = Provider.of<EmployeeProvider>(context);
     final group = Provider.of<GroupProvider>(context);
     final department = Provider.of<DepartmentProvider>(context, listen: false);

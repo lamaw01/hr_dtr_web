@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hr_dtr_web/model/group_model.dart';
 import 'package:intl/intl.dart';
 import 'package:excel/excel.dart';
 import 'package:charset/charset.dart';
@@ -32,6 +33,12 @@ class HistoryProvider with ChangeNotifier {
 
   void changeLoadingState(bool state) {
     _isLoading.value = state;
+  }
+
+  void clearHistory() {
+    _historyList.clear();
+    _uiList.clear();
+    notifyListeners();
   }
 
   bool isSoloUser() {
@@ -79,6 +86,21 @@ class HistoryProvider with ChangeNotifier {
       setData(result);
     } catch (e) {
       debugPrint('$e getRecords');
+    }
+  }
+
+  Future<void> getGroupRecords(GroupModel group) async {
+    var newselectedFrom = selectedFrom.copyWith(hour: 0, minute: 0, second: 0);
+    var newselectedTo = selectedTo.copyWith(hour: 23, minute: 59, second: 59);
+    try {
+      var result = await HttpService.getGroupRecords(
+        dateFrom: _dateFormat1.format(newselectedFrom),
+        dateTo: _dateFormat1.format(newselectedTo),
+        group: group,
+      );
+      setData(result);
+    } catch (e) {
+      debugPrint('$e getGroupRecords');
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/group_provider.dart';
+import '../view/edit_group_view.dart';
 
 class GroupsWidget extends StatefulWidget {
   const GroupsWidget({super.key});
@@ -26,9 +27,20 @@ class _GroupsWidgetState extends State<GroupsWidget> {
                     const Divider(height: 0.0),
                 itemCount: group.groupList.length,
                 itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return const SizedBox();
+                  }
                   return ListTile(
                     title: Text(group.groupList[index].groupName),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              EditGroupView(groupModel: group.groupList[index]),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

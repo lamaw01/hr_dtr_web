@@ -11,6 +11,8 @@ class GroupProvider with ChangeNotifier {
   var _groupList = <GroupModel>[];
   List<GroupModel> get groupList => _groupList;
 
+  var dropdownValue = GroupModel(id: 0, groupName: 'None');
+
   void addToList(Iterable<EmployeeModel> listOfSelected) {
     var tempList = <EmployeeModel>[];
     tempList.addAll(listOfSelected);
@@ -40,9 +42,21 @@ class GroupProvider with ChangeNotifier {
     try {
       final result = await HttpService.getGroup();
       _groupList = result;
+      // _groupList.add(dropdownValue);
+      _groupList.insert(0, dropdownValue);
       notifyListeners();
     } catch (e) {
-      debugPrint('$e getDepartment');
+      debugPrint('$e getGroup');
+    }
+  }
+
+  Future<void> getEmployeeGroup(String groupId) async {
+    try {
+      final result = await HttpService.getEmployeeGroup(groupId);
+      _employeeList = result;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('$e getEmployeeGroup');
     }
   }
 }

@@ -1,3 +1,7 @@
+// ignore_for_file: unused_import
+
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -37,6 +41,7 @@ class HttpService {
           ),
         )
         .timeout(const Duration(seconds: 10));
+    debugPrint('getRecords ${response.body}');
     return historyModelFromJson(response.body);
   }
 
@@ -140,5 +145,47 @@ class HttpService {
       },
     ).timeout(const Duration(seconds: 10));
     return groupModelFromJson(response.body);
+  }
+
+  static Future<List<EmployeeModel>> getEmployeeGroup(String groupId) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/get_employee_group.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(<String, dynamic>{
+            "group_id": groupId,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+    return employeeModelFromJson(response.body);
+  }
+
+  static Future<List<HistoryModel>> getGroupRecords({
+    required String dateFrom,
+    required String dateTo,
+    required GroupModel group,
+  }) async {
+    log('${group.id}');
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/get_history_group.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'date_from': dateFrom,
+              'date_to': dateTo,
+              'group_id': group.id.toString(),
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint('kani ${response.statusCode} ${response.body}');
+    return historyModelFromJson(response.body);
   }
 }
