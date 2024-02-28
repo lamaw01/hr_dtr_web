@@ -26,8 +26,18 @@ class _AddGroupViewState extends State<AddGroupView> {
     group.clearEmployeeList();
     department.dropdownValue = department.departmentList[0];
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await employee.getEmployee(department.dropdownValue.departmentId);
+      await employee.getEmployee(
+          departmentId: department.dropdownValue.departmentId);
     });
+  }
+
+  void showErrorSnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -119,7 +129,9 @@ class _AddGroupViewState extends State<AddGroupView> {
                                       department.dropdownValue = value;
                                     });
                                     await employee.getEmployee(
-                                        department.dropdownValue.departmentId);
+                                        departmentId: department
+                                            .dropdownValue.departmentId,
+                                        selectedEmployee: group.employeeList);
                                   }
                                 },
                                 items: department.departmentList
@@ -193,11 +205,20 @@ class _AddGroupViewState extends State<AddGroupView> {
                         width: double.infinity,
                         height: 40.0,
                         child: TextButton(
-                          onPressed: () {
-                            final list = employee.employeeList
+                          onPressed: () async {
+                            final listEmp = employee.employeeList
                                 .where((e) => e.isSelected == true);
 
-                            group.addToList(list);
+                            final listSearchEmp = employee.searchEmployeeList
+                                .where((e) => e.isSelected == true);
+
+                            group.addToList(listEmp);
+                            group.addToList(listSearchEmp);
+
+                            await employee.getEmployee(
+                                departmentId:
+                                    department.dropdownValue.departmentId,
+                                selectedEmployee: group.employeeList);
                           },
                           child: const Text(
                             'Add',
@@ -249,17 +270,37 @@ class _AddGroupViewState extends State<AddGroupView> {
                                 const Divider(height: 0.0),
                             itemCount: group.employeeList.length,
                             itemBuilder: ((context, index) {
-                              return SizedBox(
-                                height: 40.0,
-                                child: Center(
-                                  child: Text(
-                                    textAlign: TextAlign.start,
-                                    employee
-                                        .fullName(group.employeeList[index]),
-                                    style: const TextStyle(fontSize: 13.0),
+                              return ListTile(
+                                title: Text(
+                                  employee.fullName(group.employeeList[index]),
+                                  style: const TextStyle(fontSize: 13.0),
+                                ),
+                                trailing: IconButton(
+                                  splashRadius: 15.0,
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.red,
                                   ),
+                                  onPressed: () async {
+                                    group.removeEmployee(index);
+                                    await employee.getEmployee(
+                                        departmentId: department
+                                            .dropdownValue.departmentId,
+                                        selectedEmployee: group.employeeList);
+                                  },
                                 ),
                               );
+                              // return SizedBox(
+                              //   height: 40.0,
+                              //   child: Center(
+                              //     child: Text(
+                              //       textAlign: TextAlign.start,
+                              //       employee
+                              //           .fullName(group.employeeList[index]),
+                              //       style: const TextStyle(fontSize: 13.0),
+                              //     ),
+                              //   ),
+                              // );
                             }),
                           ),
                         ),
@@ -271,8 +312,13 @@ class _AddGroupViewState extends State<AddGroupView> {
                         height: 40.0,
                         child: TextButton(
                           onPressed: () async {
+                            if (groupNameController.text.isEmpty) {
+                              showErrorSnackBar('Empty Group Name');
+                              return;
+                            }
                             await group
                                 .addGroup(groupNameController.text.trim());
+
                             // ignore: use_build_context_synchronously
                             Navigator.pop(context);
                           },

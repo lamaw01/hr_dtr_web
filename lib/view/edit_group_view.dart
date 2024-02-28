@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +20,7 @@ class EditGroupView extends StatefulWidget {
 class _EditGroupViewState extends State<EditGroupView> {
   final groupNameController = TextEditingController();
   final searchController = TextEditingController();
+  String initialGroupName = '';
 
   @override
   void initState() {
@@ -28,10 +31,52 @@ class _EditGroupViewState extends State<EditGroupView> {
     group.clearEmployeeList();
     department.dropdownValue = department.departmentList[0];
     groupNameController.text = widget.groupModel.groupName;
+    initialGroupName = widget.groupModel.groupName;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await employee.getEmployee(department.dropdownValue.departmentId);
+      await employee.getEmployee(
+          departmentId: department.dropdownValue.departmentId,
+          selectedEmployee: group.employeeList);
       await group.getEmployeeGroup('${widget.groupModel.id}');
     });
+  }
+
+  void showErrorSnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void confirmDeleteGroup(GroupModel groupModel) {
+    final group = Provider.of<GroupProvider>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          content: Text('Delete ${groupModel.groupName} group?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await group.deleteGroup(widget.groupModel);
+
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -44,6 +89,19 @@ class _EditGroupViewState extends State<EditGroupView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(title),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              confirmDeleteGroup(widget.groupModel);
+            },
+            splashRadius: 20.0,
+            tooltip: 'Delete Group',
+            icon: const Icon(
+              Icons.delete_forever,
+              color: Colors.red,
+            ),
+          ),
+        ],
       ),
       body: Center(
         child: Row(
@@ -53,7 +111,7 @@ class _EditGroupViewState extends State<EditGroupView> {
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: SizedBox(
-                  height: 600.0,
+                  height: 800.0,
                   width: 500.0,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -80,10 +138,10 @@ class _EditGroupViewState extends State<EditGroupView> {
                           } else {
                             employee.changeStateSearching(true);
                             await employee.searchEmployee(
-                              employeeId: value.trim(),
-                              departmentId:
-                                  department.dropdownValue.departmentId,
-                            );
+                                employeeId: value.trim(),
+                                departmentId:
+                                    department.dropdownValue.departmentId,
+                                selectedEmployee: group.employeeList);
                           }
                         },
                       ),
@@ -123,7 +181,9 @@ class _EditGroupViewState extends State<EditGroupView> {
                                       department.dropdownValue = value;
                                     });
                                     await employee.getEmployee(
-                                        department.dropdownValue.departmentId);
+                                        departmentId: department
+                                            .dropdownValue.departmentId,
+                                        selectedEmployee: group.employeeList);
                                   }
                                 },
                                 items: department.departmentList
@@ -197,11 +257,20 @@ class _EditGroupViewState extends State<EditGroupView> {
                         width: double.infinity,
                         height: 40.0,
                         child: TextButton(
-                          onPressed: () {
-                            final list = employee.employeeList
+                          onPressed: () async {
+                            final listEmp = employee.employeeList
                                 .where((e) => e.isSelected == true);
 
-                            group.addToList(list);
+                            final listSearchEmp = employee.searchEmployeeList
+                                .where((e) => e.isSelected == true);
+
+                            group.addToList(listEmp);
+                            group.addToList(listSearchEmp);
+
+                            await employee.getEmployee(
+                                departmentId:
+                                    department.dropdownValue.departmentId,
+                                selectedEmployee: group.employeeList);
                           },
                           child: const Text(
                             'Add',
@@ -222,7 +291,7 @@ class _EditGroupViewState extends State<EditGroupView> {
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: SizedBox(
-                  height: 600.0,
+                  height: 800.0,
                   width: 400.0,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -253,16 +322,30 @@ class _EditGroupViewState extends State<EditGroupView> {
                                 const Divider(height: 0.0),
                             itemCount: group.employeeList.length,
                             itemBuilder: ((context, index) {
-                              return SizedBox(
-                                height: 40.0,
-                                child: Center(
-                                  child: Text(
-                                    textAlign: TextAlign.start,
-                                    employee
-                                        .fullName(group.employeeList[index]),
-                                    style: const TextStyle(fontSize: 13.0),
-                                  ),
-                                ),
+                              // return SizedBox(
+                              //   height: 40.0,
+                              //   child: Center(
+                              //     child: Text(
+                              //       textAlign: TextAlign.start,
+                              //       employee
+                              //           .fullName(group.employeeList[index]),
+                              //       style: const TextStyle(fontSize: 13.0),
+                              //     ),
+                              //   ),
+                              // );
+                              return CheckboxListTile(
+                                title: Text(employee
+                                    .fullName(group.employeeList[index])),
+                                value: group.employeeList[index].isSelected,
+                                onChanged: (bool? value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      group.employeeList[index].isSelected =
+                                          value;
+                                    });
+                                  }
+                                },
+                                dense: true,
                               );
                             }),
                           ),
@@ -275,9 +358,24 @@ class _EditGroupViewState extends State<EditGroupView> {
                         height: 40.0,
                         child: TextButton(
                           onPressed: () async {
-                            await group
-                                .addGroup(groupNameController.text.trim());
-                            // ignore: use_build_context_synchronously
+                            if (groupNameController.text.isEmpty) {
+                              showErrorSnackBar('Empty Group Name');
+                              return;
+                            }
+
+                            group.addNewEmp();
+
+                            final newGroup = GroupModel(
+                                id: widget.groupModel.id,
+                                groupName: groupNameController.text.trim());
+
+                            await group.editGroup(
+                              group: newGroup,
+                              updateGroupName:
+                                  initialGroupName != newGroup.groupName
+                                      ? 1
+                                      : 0,
+                            );
                             Navigator.pop(context);
                           },
                           child: const Text(

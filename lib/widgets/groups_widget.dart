@@ -13,8 +13,17 @@ class GroupsWidget extends StatefulWidget {
 
 class _GroupsWidgetState extends State<GroupsWidget> {
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     final group = Provider.of<GroupProvider>(context, listen: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await group.getGroup();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final group = Provider.of<GroupProvider>(context);
     return AlertDialog(
       content: SizedBox(
         height: 500.0,

@@ -8,15 +8,42 @@ class GroupProvider with ChangeNotifier {
   var _employeeList = <EmployeeModel>[];
   List<EmployeeModel> get employeeList => _employeeList;
 
+  final _initialEmployeeList = <EmployeeModel>[];
+
   var _groupList = <GroupModel>[];
   List<GroupModel> get groupList => _groupList;
 
   var dropdownValue = GroupModel(id: 0, groupName: 'None');
 
+  final _employeeIdNew = <String>[];
+
+  final _employeeIdRemove = <String>[];
+
+  void removeEmployee(int index) {
+    _employeeList.removeAt(index);
+    notifyListeners();
+  }
+
+  void addNewEmp() {
+    for (int i = 0; i < _employeeList.length; i++) {
+      if (_initialEmployeeList.contains(_employeeList[i])) {
+        if (!_employeeList[i].isSelected) {
+          _employeeIdRemove.add(_employeeList[i].employeeId);
+        }
+      } else {
+        if (_employeeList[i].isSelected) {
+          _employeeIdNew.add(_employeeList[i].employeeId);
+        }
+      }
+    }
+
+    // log('_employeeIdNew ${_employeeIdNew.length} _employeeIdRemove ${_employeeIdRemove.length}');
+  }
+
   void addToList(Iterable<EmployeeModel> listOfSelected) {
-    var tempList = <EmployeeModel>[];
-    tempList.addAll(listOfSelected);
-    _employeeList = tempList;
+    // var tempList = <EmployeeModel>[];
+    // tempList.addAll(listOfSelected);
+    _employeeList.addAll(listOfSelected);
     notifyListeners();
   }
 
@@ -54,9 +81,44 @@ class GroupProvider with ChangeNotifier {
     try {
       final result = await HttpService.getEmployeeGroup(groupId);
       _employeeList = result;
+      for (var emp1 in _employeeList) {
+        emp1.isSelected = true;
+      }
+      _initialEmployeeList.clear();
+      _initialEmployeeList.addAll(result);
       notifyListeners();
     } catch (e) {
       debugPrint('$e getEmployeeGroup');
+    }
+  }
+
+  Future<void> editGroup({
+    required GroupModel group,
+    required int updateGroupName,
+  }) async {
+    try {
+      await HttpService.editGroup(
+        group: group,
+        employeeIdNew: _employeeIdNew,
+        employeeIdRemove: _employeeIdRemove,
+        updateGroupName: updateGroupName,
+      );
+    } catch (e) {
+      debugPrint('$e editGroup');
+    } finally {
+      _employeeIdNew.clear();
+      _employeeIdRemove.clear();
+      await getGroup();
+    }
+  }
+
+  Future<void> deleteGroup(GroupModel group) async {
+    try {
+      await HttpService.deleteGroup(group: group);
+    } catch (e) {
+      debugPrint('$e deleteGroup');
+    } finally {
+      await getGroup();
     }
   }
 }

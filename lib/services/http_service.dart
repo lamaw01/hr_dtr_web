@@ -1,7 +1,5 @@
 // ignore_for_file: unused_import
 
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -168,7 +166,6 @@ class HttpService {
     required String dateTo,
     required GroupModel group,
   }) async {
-    log('${group.id}');
     var response = await http
         .post(
           Uri.parse('$_serverUrl/get_history_group.php'),
@@ -185,7 +182,54 @@ class HttpService {
           ),
         )
         .timeout(const Duration(seconds: 10));
-    debugPrint('kani ${response.statusCode} ${response.body}');
+    // debugPrint('getGroupRecords ${response.statusCode} ${response.body}');
     return historyModelFromJson(response.body);
+  }
+
+  static Future<void> editGroup({
+    required GroupModel group,
+    required List<String> employeeIdNew,
+    required List<String> employeeIdRemove,
+    required int updateGroupName,
+  }) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/edit_group.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'id': group.id,
+              'group_id': group.id,
+              'group_name': group.groupName,
+              'employee_id_new': employeeIdNew,
+              'employee_id_remove': employeeIdRemove,
+              'update_group_name': updateGroupName,
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint('editGroup ${response.statusCode} ${response.body}');
+  }
+
+  static Future<void> deleteGroup({required GroupModel group}) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/delete_group.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'id': group.id,
+              'group_id': group.id.toString(),
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint('deleteGroup ${response.statusCode} ${response.body}');
   }
 }
