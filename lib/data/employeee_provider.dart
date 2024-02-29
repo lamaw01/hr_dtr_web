@@ -22,10 +22,10 @@ class EmployeeProvider with ChangeNotifier {
     return '${m.lastName}, ${m.firstName} ${m.middleName}';
   }
 
-  Future<void> getEmployee(
-      {required String departmentId,
-      List<EmployeeModel>? selectedEmployee,
-      bool refresh = false}) async {
+  Future<void> getEmployee({
+    required String departmentId,
+    List<EmployeeModel>? selectedEmployee,
+  }) async {
     try {
       final result = await HttpService.getEmployee(departmentId);
       _employeeList = result;

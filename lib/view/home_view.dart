@@ -693,7 +693,7 @@ class _HomeViewState extends State<HomeView> {
                     ]
                   ] else ...[
                     SizedBox(
-                      height: 350.0,
+                      height: 380.0,
                       width: 400.0,
                       child: Card(
                         child: Padding(
@@ -796,6 +796,118 @@ class _HomeViewState extends State<HomeView> {
                                   ],
                                 ),
                               ),
+                              if (group.dropdownValue.id == 0) ...[
+                                const SizedBox(height: 10.0),
+                                SizedBox(
+                                  height: 35.0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        'Department: ',
+                                        style: TextStyle(
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Container(
+                                        height: 35.0,
+                                        width: 250.0,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(5),
+                                          border: Border.all(
+                                            color: Colors.grey,
+                                            style: BorderStyle.solid,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child:
+                                              DropdownButton<DepartmentModel>(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10.0),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                            value: department.dropdownValue,
+                                            onChanged:
+                                                (DepartmentModel? value) async {
+                                              if (value != null) {
+                                                setState(() {
+                                                  department.dropdownValue =
+                                                      value;
+                                                });
+                                              }
+                                            },
+                                            items: department.departmentList
+                                                .map<
+                                                        DropdownMenuItem<
+                                                            DepartmentModel>>(
+                                                    (DepartmentModel value) {
+                                              return DropdownMenuItem<
+                                                  DepartmentModel>(
+                                                value: value,
+                                                child:
+                                                    Text(value.departmentName),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 10.0),
+                                SizedBox(
+                                  height: 35.0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          style:
+                                              const TextStyle(fontSize: 18.0),
+                                          decoration: const InputDecoration(
+                                            label: Text('ID no. or Name'),
+                                            border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.grey,
+                                                width: 1.0,
+                                              ),
+                                            ),
+                                            isDense: true,
+                                            contentPadding: EdgeInsets.fromLTRB(
+                                                12.0, 12.0, 12.0, 12.0),
+                                          ),
+                                          controller: idController,
+                                          onSubmitted: (data) async {
+                                            history.changeLoadingState(true);
+                                            await Future.delayed(
+                                                const Duration(seconds: 1));
+                                            if (idController.text.isEmpty) {
+                                              // get records all
+                                              await history.getRecordsAll(
+                                                  department:
+                                                      department.dropdownValue);
+                                            } else {
+                                              // get records with id or name
+                                              await history.getRecords(
+                                                  // employeeId: idController.text.trim(),
+                                                  employeeId:
+                                                      idController.text.trim(),
+                                                  department:
+                                                      department.dropdownValue);
+                                            }
+                                            history.changeLoadingState(false);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 10.0),
                               SizedBox(
                                 height: 35.0,
@@ -803,16 +915,17 @@ class _HomeViewState extends State<HomeView> {
                                   mainAxisSize: MainAxisSize.max,
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     const Text(
-                                      'Department: ',
+                                      'Group: ',
                                       style: TextStyle(
                                         fontSize: 16.0,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     Container(
-                                      height: 35.0,
+                                      height: 40.0,
                                       width: 250.0,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(5),
@@ -823,79 +936,30 @@ class _HomeViewState extends State<HomeView> {
                                         ),
                                       ),
                                       child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<DepartmentModel>(
+                                        child: DropdownButton<GroupModel>(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 10.0),
                                           borderRadius:
                                               BorderRadius.circular(5),
-                                          value: department.dropdownValue,
-                                          onChanged:
-                                              (DepartmentModel? value) async {
+                                          value: group.dropdownValue,
+                                          onChanged: (GroupModel? value) async {
                                             if (value != null) {
                                               setState(() {
-                                                department.dropdownValue =
-                                                    value;
+                                                group.dropdownValue = value;
                                               });
+                                              //clear history
+                                              history.clearHistory();
                                             }
                                           },
-                                          items: department.departmentList.map<
-                                                  DropdownMenuItem<
-                                                      DepartmentModel>>(
-                                              (DepartmentModel value) {
-                                            return DropdownMenuItem<
-                                                DepartmentModel>(
+                                          items: group.groupList.map<
+                                                  DropdownMenuItem<GroupModel>>(
+                                              (GroupModel value) {
+                                            return DropdownMenuItem<GroupModel>(
                                               value: value,
-                                              child: Text(value.departmentName),
+                                              child: Text(value.groupName),
                                             );
                                           }).toList(),
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 10.0),
-                              SizedBox(
-                                height: 35.0,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        style: const TextStyle(fontSize: 18.0),
-                                        decoration: const InputDecoration(
-                                          label: Text('ID no. or Name'),
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.grey,
-                                              width: 1.0,
-                                            ),
-                                          ),
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.fromLTRB(
-                                              12.0, 12.0, 12.0, 12.0),
-                                        ),
-                                        controller: idController,
-                                        onSubmitted: (data) async {
-                                          history.changeLoadingState(true);
-                                          await Future.delayed(
-                                              const Duration(seconds: 1));
-                                          if (idController.text.isEmpty) {
-                                            // get records all
-                                            await history.getRecordsAll(
-                                                department:
-                                                    department.dropdownValue);
-                                          } else {
-                                            // get records with id or name
-                                            await history.getRecords(
-                                                // employeeId: idController.text.trim(),
-                                                employeeId:
-                                                    idController.text.trim(),
-                                                department:
-                                                    department.dropdownValue);
-                                          }
-                                          history.changeLoadingState(false);
-                                        },
                                       ),
                                     ),
                                   ],
