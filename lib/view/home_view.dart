@@ -1077,15 +1077,23 @@ class _HomeViewState extends State<HomeView> {
                                     history.changeLoadingState(true);
                                     await Future.delayed(
                                         const Duration(seconds: 1));
-                                    if (idController.text.isEmpty) {
-                                      // get records all
-                                      await history.getRecordsAll(
-                                          department: department.dropdownValue);
+                                    if (group.dropdownValue.id != 0) {
+                                      await history
+                                          .getGroupRecords(group.dropdownValue);
                                     } else {
-                                      // get records with id or name
-                                      await history.getRecords(
-                                          employeeId: idController.text.trim(),
-                                          department: department.dropdownValue);
+                                      if (idController.text.isEmpty) {
+                                        // get records all
+                                        await history.getRecordsAll(
+                                            department:
+                                                department.dropdownValue);
+                                      } else {
+                                        // get records with id or name
+                                        await history.getRecords(
+                                            employeeId:
+                                                idController.text.trim(),
+                                            department:
+                                                department.dropdownValue);
+                                      }
                                     }
                                     history.changeLoadingState(false);
                                   },
@@ -1184,7 +1192,59 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ),
                       ],
-                    ]
+                      const SizedBox(height: 25.0),
+                      if (history.uiList.length <
+                          history.historyList.length) ...[
+                        SizedBox(
+                          height: 50.0,
+                          width: 180.0,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.green[300],
+                            ),
+                            onPressed: () {
+                              if (history.uiList.length <
+                                  history.historyList.length) {
+                                history.loadMore();
+                              }
+                            },
+                            child: const Text(
+                              'Load more..',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15.0),
+                      ],
+                      Text(
+                        'Showing ${history.uiList.length} out of ${history.historyList.length} results.',
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                        ),
+                      ),
+                      const SizedBox(height: 50.0),
+                    ] else if (history.historyList.isEmpty) ...[
+                      const SizedBox(height: 25.0),
+                      if (history.selectedFrom.isAfter(history.selectedTo)) ...[
+                        const Text(
+                          'Date From is advance than Date To.',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ] else ...[
+                        const Text(
+                          'No data found.',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
+                      ],
+                    ],
                   ],
                 ],
               ),
