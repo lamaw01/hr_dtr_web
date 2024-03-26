@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:hr_dtr_web/model/group_model.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +16,9 @@ import '../services/http_service.dart';
 
 final _is24HourFormat = ValueNotifier(false);
 ValueNotifier<bool> get is24HourFormat => _is24HourFormat;
+
+final _approvedSelfies = ValueNotifier(false);
+ValueNotifier<bool> get approvedSelfies => _approvedSelfies;
 
 class HistoryProvider with ChangeNotifier {
   var _historyList = <HistoryModel>[];
@@ -120,11 +125,63 @@ class HistoryProvider with ChangeNotifier {
     }
   }
 
+  Future<void> getRecordsAllApprovedSelfies(
+      {required DepartmentModel department}) async {
+    var newselectedFrom = selectedFrom.copyWith(hour: 0, minute: 0, second: 0);
+    var newselectedTo = selectedTo.copyWith(hour: 23, minute: 59, second: 59);
+
+    try {
+      var result = await HttpService.getRecordsAllApprovedSelfies(
+        dateFrom: _dateFormat1.format(newselectedFrom),
+        dateTo: _dateFormat1.format(newselectedTo),
+        department: department,
+      );
+      setData(result);
+    } catch (e) {
+      debugPrint('$e getRecordsAllApprovedSelfies');
+    }
+  }
+
+  Future<void> getRecordsApprovedSelfies({
+    required String employeeId,
+    required DepartmentModel department,
+  }) async {
+    var newselectedFrom = selectedFrom.copyWith(hour: 0, minute: 0, second: 0);
+    var newselectedTo = selectedTo.copyWith(hour: 23, minute: 59, second: 59);
+    try {
+      var result = await HttpService.getRecordsApprovedSelfies(
+        employeeId: employeeId,
+        dateFrom: _dateFormat1.format(newselectedFrom),
+        dateTo: _dateFormat1.format(newselectedTo),
+        department: department,
+      );
+      setData(result);
+    } catch (e) {
+      debugPrint('$e getRecordsApprovedSelfies');
+    }
+  }
+
+  Future<void> getGroupRecordsApprovedSelfies(GroupModel group) async {
+    var newselectedFrom = selectedFrom.copyWith(hour: 0, minute: 0, second: 0);
+    var newselectedTo = selectedTo.copyWith(hour: 23, minute: 59, second: 59);
+    try {
+      var result = await HttpService.getGroupRecordsApprovedSelfies(
+        dateFrom: _dateFormat1.format(newselectedFrom),
+        dateTo: _dateFormat1.format(newselectedTo),
+        group: group,
+      );
+      setData(result);
+    } catch (e) {
+      debugPrint('$e getGroupRecords');
+    }
+  }
+
   String fullNameHistory(HistoryModel h) {
     return '${h.lastName}, ${h.firstName} ${h.middleName}';
   }
 
   String dateFormat12or24Web(DateTime dateTime) {
+    log('is24 ${is24HourFormat.value}');
     if (is24HourFormat.value) {
       return DateFormat('HH:mm').format(dateTime);
     } else {

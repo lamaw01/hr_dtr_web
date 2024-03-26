@@ -1,5 +1,3 @@
-// ignore_for_file: unused_import
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -231,5 +229,82 @@ class HttpService {
         )
         .timeout(const Duration(seconds: 10));
     debugPrint('deleteGroup ${response.statusCode} ${response.body}');
+  }
+
+  static Future<List<HistoryModel>> getRecordsAllApprovedSelfies({
+    required String dateFrom,
+    required String dateTo,
+    required DepartmentModel department,
+  }) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/get_history_all_approved_selfies.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'date_from': dateFrom,
+              'date_to': dateTo,
+              'department': department.departmentId,
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint("getRecordsAllApproved ${response.body}");
+    return historyModelFromJson(response.body);
+  }
+
+  static Future<List<HistoryModel>> getRecordsApprovedSelfies({
+    required String employeeId,
+    required String dateFrom,
+    required String dateTo,
+    required DepartmentModel department,
+  }) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/get_history_approved_selfies.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'employee_id': employeeId,
+              'date_from': dateFrom,
+              'date_to': dateTo,
+              'department': department.departmentId,
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint('getRecordsApprovedSelfies ${response.body}');
+    return historyModelFromJson(response.body);
+  }
+
+  static Future<List<HistoryModel>> getGroupRecordsApprovedSelfies({
+    required String dateFrom,
+    required String dateTo,
+    required GroupModel group,
+  }) async {
+    var response = await http
+        .post(
+          Uri.parse('$_serverUrl/get_history_group_approved_selfies.php'),
+          headers: <String, String>{
+            'Accept': '*/*',
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode(
+            <String, dynamic>{
+              'date_from': dateFrom,
+              'date_to': dateTo,
+              'group_id': group.id.toString(),
+            },
+          ),
+        )
+        .timeout(const Duration(seconds: 10));
+    debugPrint('getGroupRecordsApproved ${response.body}');
+    return historyModelFromJson(response.body);
   }
 }

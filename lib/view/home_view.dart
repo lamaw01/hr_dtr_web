@@ -14,9 +14,6 @@ import '../widgets/groups_widget.dart';
 import '../widgets/logs_widget.dart';
 import 'add_group_view.dart';
 
-final _is24HourFormat = ValueNotifier(false);
-ValueNotifier<bool> get is24HourFormat => _is24HourFormat;
-
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -356,19 +353,36 @@ class _HomeViewState extends State<HomeView> {
                                           history.changeLoadingState(true);
                                           await Future.delayed(
                                               const Duration(seconds: 1));
-                                          if (idController.text.isEmpty) {
-                                            // get records all
-                                            await history.getRecordsAll(
-                                                department:
-                                                    department.dropdownValue);
-                                          } else {
-                                            // get records with id or name
+
+                                          if (!approvedSelfies.value &&
+                                              idController.text.isNotEmpty) {
                                             await history.getRecords(
                                                 employeeId:
                                                     idController.text.trim(),
                                                 department:
                                                     department.dropdownValue);
+                                          } else if (!approvedSelfies.value &&
+                                              idController.text.isEmpty) {
+                                            await history.getRecordsAll(
+                                                department:
+                                                    department.dropdownValue);
+                                          } else if (approvedSelfies.value &&
+                                              idController.text.isNotEmpty) {
+                                            await history
+                                                .getRecordsApprovedSelfies(
+                                                    employeeId: idController
+                                                        .text
+                                                        .trim(),
+                                                    department: department
+                                                        .dropdownValue);
+                                          } else if (approvedSelfies.value &&
+                                              idController.text.isEmpty) {
+                                            await history
+                                                .getRecordsAllApprovedSelfies(
+                                                    department: department
+                                                        .dropdownValue);
                                           }
+
                                           history.changeLoadingState(false);
                                         },
                                       ),
@@ -431,26 +445,62 @@ class _HomeViewState extends State<HomeView> {
                               ),
                               const SizedBox(height: 5.0),
                               Row(
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text(
-                                    '24 Hour format: ',
-                                    style: TextStyle(
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w600,
+                                  SizedBox(
+                                    height: 30.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          '24 Hour format: ',
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        ValueListenableBuilder(
+                                          valueListenable: is24HourFormat,
+                                          builder: (_, value, __) {
+                                            return Checkbox(
+                                              value: is24HourFormat.value,
+                                              onChanged: (newCheckboxState) {
+                                                is24HourFormat.value =
+                                                    newCheckboxState!;
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  ValueListenableBuilder(
-                                    valueListenable: is24HourFormat,
-                                    builder: (_, value, __) {
-                                      return Checkbox(
-                                        value: is24HourFormat.value,
-                                        onChanged: (newCheckboxState) {
-                                          is24HourFormat.value =
-                                              newCheckboxState!;
-                                        },
-                                      );
-                                    },
+                                  const SizedBox(width: 10.0),
+                                  SizedBox(
+                                    height: 30.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          'Approved Selfies Only',
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        ValueListenableBuilder(
+                                          valueListenable: approvedSelfies,
+                                          builder: (_, value, __) {
+                                            return Checkbox(
+                                              value: approvedSelfies.value,
+                                              onChanged: (newCheckboxState) {
+                                                approvedSelfies.value =
+                                                    newCheckboxState!;
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -538,24 +588,38 @@ class _HomeViewState extends State<HomeView> {
                                     history.changeLoadingState(true);
                                     await Future.delayed(
                                         const Duration(seconds: 1));
-                                    if (group.dropdownValue.id != 0) {
+
+                                    if (!approvedSelfies.value &&
+                                        group.dropdownValue.id != 0) {
                                       await history
                                           .getGroupRecords(group.dropdownValue);
-                                    } else {
-                                      if (idController.text.isEmpty) {
-                                        // get records all
-                                        await history.getRecordsAll(
-                                            department:
-                                                department.dropdownValue);
-                                      } else {
-                                        // get records with id or name
-                                        await history.getRecords(
-                                            employeeId:
-                                                idController.text.trim(),
-                                            department:
-                                                department.dropdownValue);
-                                      }
+                                    } else if (approvedSelfies.value &&
+                                        group.dropdownValue.id != 0) {
+                                      await history
+                                          .getGroupRecordsApprovedSelfies(
+                                              group.dropdownValue);
+                                    } else if (!approvedSelfies.value &&
+                                        idController.text.isNotEmpty) {
+                                      await history.getRecords(
+                                          employeeId: idController.text.trim(),
+                                          department: department.dropdownValue);
+                                    } else if (!approvedSelfies.value &&
+                                        idController.text.isEmpty) {
+                                      await history.getRecordsAll(
+                                          department: department.dropdownValue);
+                                    } else if (approvedSelfies.value &&
+                                        idController.text.isNotEmpty) {
+                                      await history.getRecordsApprovedSelfies(
+                                          employeeId: idController.text.trim(),
+                                          department: department.dropdownValue);
+                                    } else if (approvedSelfies.value &&
+                                        idController.text.isEmpty) {
+                                      await history
+                                          .getRecordsAllApprovedSelfies(
+                                              department:
+                                                  department.dropdownValue);
                                     }
+
                                     history.changeLoadingState(false);
                                   },
                                   child: const Text(
@@ -886,20 +950,36 @@ class _HomeViewState extends State<HomeView> {
                                             history.changeLoadingState(true);
                                             await Future.delayed(
                                                 const Duration(seconds: 1));
-                                            if (idController.text.isEmpty) {
-                                              // get records all
-                                              await history.getRecordsAll(
-                                                  department:
-                                                      department.dropdownValue);
-                                            } else {
-                                              // get records with id or name
+
+                                            if (!approvedSelfies.value &&
+                                                idController.text.isNotEmpty) {
                                               await history.getRecords(
-                                                  // employeeId: idController.text.trim(),
                                                   employeeId:
                                                       idController.text.trim(),
                                                   department:
                                                       department.dropdownValue);
+                                            } else if (!approvedSelfies.value &&
+                                                idController.text.isEmpty) {
+                                              await history.getRecordsAll(
+                                                  department:
+                                                      department.dropdownValue);
+                                            } else if (approvedSelfies.value &&
+                                                idController.text.isNotEmpty) {
+                                              await history
+                                                  .getRecordsApprovedSelfies(
+                                                      employeeId: idController
+                                                          .text
+                                                          .trim(),
+                                                      department: department
+                                                          .dropdownValue);
+                                            } else if (approvedSelfies.value &&
+                                                idController.text.isEmpty) {
+                                              await history
+                                                  .getRecordsAllApprovedSelfies(
+                                                      department: department
+                                                          .dropdownValue);
                                             }
+
                                             history.changeLoadingState(false);
                                           },
                                         ),
@@ -966,32 +1046,65 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                               ),
                               const SizedBox(height: 5.0),
-                              SizedBox(
-                                height: 30.0,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      '24 Hour format: ',
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    ValueListenableBuilder(
-                                      valueListenable: is24HourFormat,
-                                      builder: (_, value, __) {
-                                        return Checkbox(
-                                          value: is24HourFormat.value,
-                                          onChanged: (newCheckboxState) {
-                                            is24HourFormat.value =
-                                                newCheckboxState!;
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 30.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          '24 Hour format: ',
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        ValueListenableBuilder(
+                                          valueListenable: is24HourFormat,
+                                          builder: (_, value, __) {
+                                            return Checkbox(
+                                              value: is24HourFormat.value,
+                                              onChanged: (newCheckboxState) {
+                                                is24HourFormat.value =
+                                                    newCheckboxState!;
+                                              },
+                                            );
                                           },
-                                        );
-                                      },
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(width: 10.0),
+                                  SizedBox(
+                                    height: 30.0,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          'Approved Selfies',
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        ValueListenableBuilder(
+                                          valueListenable: approvedSelfies,
+                                          builder: (_, value, __) {
+                                            return Checkbox(
+                                              value: approvedSelfies.value,
+                                              onChanged: (newCheckboxState) {
+                                                approvedSelfies.value =
+                                                    newCheckboxState!;
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                               if (history.historyList.isNotEmpty) ...[
                                 const SizedBox(height: 5.0),
@@ -1077,24 +1190,38 @@ class _HomeViewState extends State<HomeView> {
                                     history.changeLoadingState(true);
                                     await Future.delayed(
                                         const Duration(seconds: 1));
-                                    if (group.dropdownValue.id != 0) {
+
+                                    if (!approvedSelfies.value &&
+                                        group.dropdownValue.id != 0) {
                                       await history
                                           .getGroupRecords(group.dropdownValue);
-                                    } else {
-                                      if (idController.text.isEmpty) {
-                                        // get records all
-                                        await history.getRecordsAll(
-                                            department:
-                                                department.dropdownValue);
-                                      } else {
-                                        // get records with id or name
-                                        await history.getRecords(
-                                            employeeId:
-                                                idController.text.trim(),
-                                            department:
-                                                department.dropdownValue);
-                                      }
+                                    } else if (approvedSelfies.value &&
+                                        group.dropdownValue.id != 0) {
+                                      await history
+                                          .getGroupRecordsApprovedSelfies(
+                                              group.dropdownValue);
+                                    } else if (!approvedSelfies.value &&
+                                        idController.text.isNotEmpty) {
+                                      await history.getRecords(
+                                          employeeId: idController.text.trim(),
+                                          department: department.dropdownValue);
+                                    } else if (!approvedSelfies.value &&
+                                        idController.text.isEmpty) {
+                                      await history.getRecordsAll(
+                                          department: department.dropdownValue);
+                                    } else if (approvedSelfies.value &&
+                                        idController.text.isNotEmpty) {
+                                      await history.getRecordsApprovedSelfies(
+                                          employeeId: idController.text.trim(),
+                                          department: department.dropdownValue);
+                                    } else if (approvedSelfies.value &&
+                                        idController.text.isEmpty) {
+                                      await history
+                                          .getRecordsAllApprovedSelfies(
+                                              department:
+                                                  department.dropdownValue);
                                     }
+
                                     history.changeLoadingState(false);
                                   },
                                   child: const Text(
